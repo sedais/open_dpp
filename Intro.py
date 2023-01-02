@@ -29,7 +29,7 @@ st.set_page_config(
     page_icon="🚀",
 )
 
-st.write("# Welcome to Product Pass Social Media Analysis Results! 🚀")
+st.write("# Welcome to (Open) Product Pass Social Media Analysis Results! 🚀")
 
 
 with st.expander("ℹ️ - About this app", expanded=True):
