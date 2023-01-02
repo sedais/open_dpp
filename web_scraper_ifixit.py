@@ -5,7 +5,7 @@ import requests
 import re
 from pymongo import MongoClient
 from pymongo.server_api import ServerApi
-
+from urllib.request import urlopen
 from tabulate import tabulate
 
 
@@ -85,10 +85,14 @@ def insert_to_mongo(dict):
 
 def get_the_content():
     # Open up local html file (downloaded from the web)
-    # with open("Repairability_Scores_iFixit.html", "r") as f:
+    # with open("Smartphone_Repairability_Scores_iFixit_updated.html", "r") as f:
     #     soup = BeautifulSoup(f, "html.parser")
-    with open("Smartphone_Repairability_Scores_iFixit_updated.html", "r") as f:
-        soup = BeautifulSoup(f, "html.parser")
+
+    # Or with url from the web
+    url = "https://www.ifixit.com/smartphone-repairability?sort=date"
+    page = urlopen(url)
+    html = page.read().decode("utf-8")
+    soup = BeautifulSoup(html, "html.parser")
     df_ifixit_phones = pd.DataFrame(columns=['brand', 'model', 'year', 'score', 'fact1', 'fact2', 'fact3'])
 
     brands, models, years, scores, facts = ([] for _ in range(5))
@@ -147,7 +151,7 @@ if __name__ == '__main__':
     # dict_fixit = df_ifixit.to_dict('records')
     # insert_to_mongo(dict_fixit)
 
-    df_mongo = get_content_from_mongo()
-    print(tabulate(df_mongo, headers='keys', tablefmt='psql'))
+    #df_mongo = get_content_from_mongo()
+    #print(tabulate(df_mongo, headers='keys', tablefmt='psql'))
 
 

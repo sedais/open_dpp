@@ -83,18 +83,37 @@ df_apple_mean = df_apple.groupby(['year'])['score'].mean()
 df_apple = df_apple_mean.to_frame().reset_index()
 
 st.subheader("Average Score by Year of Apple Phones")
-st.bar_chart(df_apple, x='year', y='score')
+st.line_chart(df_apple, x='year', y='score')
 st.write(
     "Even though we can see Apple iPhone repairability has been increased over the years, we cannot say that it shows an upward trend.")
 
+#df_samsung = data[(data['brand'] == "Samsung") | (data['brand'] == "Apple")]
 df_samsung = data[data['brand'] == "Samsung"]
+print("here samsung")
+print(df_samsung)
 df_samsung_mean = df_samsung.groupby(['year'])['score'].mean()
 df_samsung = df_samsung_mean.to_frame().reset_index()
 
 st.subheader("Average Score by Year of Samsung Phones")
-st.bar_chart(df_samsung, x='year', y='score')
+st.line_chart(df_samsung, x='year', y='score')
 st.write(
-    "Interstingly Samsung phones shows a downward trend over the year, meaning as the technology advanced repairability of the Samsung phones have been decreased.")
+    "Interestingly Samsung phones shows a downward trend over the year, meaning as the technology advanced repairability of the Samsung phones have been decreased.")
+
+# s = data[data['brand'] == "Samsung"][['score', 'year']]
+# a = data[data['brand'] == "Apple"][['score', 'year']]
+# chart_data = pd.DataFrame(
+#     {'apple': a,
+#     'samsung': s}, index='year')
+# st.line_chart(chart_data)
+
+brand_list = data.brand.unique()
+selected_brand = st.selectbox('Select a brand', brand_list)
+st.write(f'selected: {selected_brand}')
+df=data[data['brand'] == selected_brand]
+df_mean=df.groupby(['year'])['score'].mean()
+st.line_chart(df_mean.to_frame().reset_index(), x='year', y='score')
+
+
 
 status_text = st.sidebar.empty()
 # status_text.text("See the takeaways at the end of the page")

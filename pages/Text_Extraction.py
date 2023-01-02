@@ -5,7 +5,7 @@ st.set_page_config(page_title="Text Extraction", page_icon=" 🔑")
 st.markdown("# Text Extraction 🔑")
 st.sidebar.header("Text Extraction")
 st.write(
-    """This pages illustrates the resukt of text extraction analysis done with the [KeyBERT](https://towardsdatascience.com/enhancing-keybert-keyword-extraction-results-with-keyphrasevectorizers-3796fa93f4db)
+    """This pages illustrates the result of text extraction analysis done with the [KeyBERT](https://towardsdatascience.com/enhancing-keybert-keyword-extraction-results-with-keyphrasevectorizers-3796fa93f4db)
      KeyBERT is an easy-to-use Python package for keyphrase extraction with BERT language models."""
 )
 

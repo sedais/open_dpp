@@ -1,36 +1,44 @@
 import streamlit as st
-import os, sys
 from pymongo import MongoClient
-import pandas as pd
-from tabulate import tabulate
 from nltk.tokenize import word_tokenize, sent_tokenize
-
-from pymongo import MongoClient
-import pandas as pd
-from transformers import AutoTokenizer
-from transformers import AutoModelForSequenceClassification
-from scipy.special import softmax
-from nltk.tokenize import word_tokenize, sent_tokenize
-
-import spacy
-from spacytextblob.spacytextblob import SpacyTextBlob
 import pandas as pd
 
-# appending the parent directory path
-# sys.path.append(r'C:\Users\a892215\Projects\ODPP\ODPP\visualization')
-#
-# # importing the methods
-# from visualization.web_scraper_ifixit import get_content_from_mongo
-
+#from transformers import AutoTokenizer
+#from transformers import AutoModelForSequenceClassification
+#from scipy.special import softmax
+#import spacy
 
 st.set_page_config(page_title="Sentiment Analysis", page_icon="🌷")
 
 st.markdown("# Sentiment Analysis 🌷")
 st.sidebar.header("Sentiment Analysis")
 st.write(
-    """This page illustrates sentiment analysis results done with the [spaCy](https://spacy.io/usage/spacy-101) 
-    library. SpaCy is a free, open-source library for advanced Natural Language Processing (NLP) in Python!"""
-)
+    """
+    Sentiment analysis (also known as opinion mining or emotion AI) is a natural language processing (NLP) technique that identifies the polarity of a given text. [here](https://en.wikipedia.org/wiki/Sentiment_analysis) 
+    Sentiment analysis allows companies to analyze data at scale, detect insights and automate processes and widely applied to reviews, survey responses and social media
+    mentions to understand how people are talking about your brand vs your competitors.""")
+st.write("""
+    This page illustrates Social Media Sentiment Analysis Results of the transcript data retrieved from the YouTube API.
+    Our Sentiment Analysis comprises results from three different NLP techniques
+    
+    1. **NLP with the** [spaCy](https://spacy.io/usage/spacy-101). SpaCy is a free, open-source library for advanced Natural Language Processing (NLP) in Python.
+    
+    2. **Google Cloud Platform Natural Language** [API](https://cloud.google.com/natural-language/docs/reference/libraries). Derives insights from unstructured text using Google machine learning.
+    
+    3. **Pre-trained Sentiment Analysis Model** from [Hugging Face Hub](https://huggingface.co/models)
+            
+        * [__Twitter-roberta-base-sentiment__](https://huggingface.co/cardiffnlp/twitter-roberta-base-sentiment) is a roBERTa model trained on ~58M tweets and fine-tuned for sentiment analysis. Fine-tuning is the process of taking a pre-trained large language model (e.g. roBERTa in this case) and then tweaking it with additional training data to make it perform a second similar task (e.g. sentiment analysis).
+            
+        * [__SiEBERT - English-Language Sentiment Classification__](https://huggingface.co/siebert/sentiment-roberta-large-english) This model ("SiEBERT", prefix for "Sentiment in English") is a fine-tuned checkpoint of RoBERTa-large. It enables reliable binary sentiment analysis for various types of English-language text. For each instance, it predicts either positive (1) or negative (0) sentiment.
+            
+        """
+         )
+
+st.subheader("Results per Phone")
+st.write(
+    "To get the sentiment analysis results, please select either IFixIt or YouTube on the left hand side. In case of YouTube, additionally select a phone.")
+st.write(
+    "We have initially collected 132 phones from the IFixIt, and we analyze three YouTube videos for each phone in the database. *(For the demo purposes, this can be scaled up conveniently)*")
 
 
 def load_data_youtube():
@@ -94,7 +102,8 @@ def get_ifixit_sentiment_data():
     pass
 
 
-def get_df_sentiment(data):
+def get_spacy_results(data):
+    print("in spacy")
     nlp = spacy.load('en_core_web_sm')
     nlp.add_pipe('spacytextblob')
     phone_names = []
@@ -104,7 +113,7 @@ def get_df_sentiment(data):
     total_neg = []
 
     for index in data.index.values:
-
+        video_id = data.loc[index]["video_id"]
         transcript = data.loc[index]["text_reduced"]
         phone_name = data.loc[index]["phone_name"]
         phone_names.append(phone_name)
@@ -169,24 +178,80 @@ def get_df_sentiment(data):
     return df_final
 
 
+def get_df_sentiment(data):
+    df_spacy = get_spacy_results(data)
+    # get_gcp_results(data)
+    return df_spacy
+
+
+def load_youtube_sentiment_data():
+    print("in get content from mongo: sentiment")
+    try:
+        client = MongoClient(
+            "mongodb+srv://odpp_user:Uu5VxTud3tkbklwT@atlascluster.aqrdbga.mongodb.net/?retryWrites=true&w=majority")
+
+        print(client.list_database_names())
+        db = client.youtube_db
+        collection = db.sentiment
+        data = pd.DataFrame(collection.find())
+        return data
+    except Exception as e:
+        print(e)
+    print("sentiment data loaded successfully")
+
 def get_youtube_sentiment_data():
-    data = load_data_youtube()
-    phone_series = data['phone_name']
+    # data = load_data_youtube()
+    data = load_youtube_sentiment_data()
+
+    phone_series = data['Phone Name']
     no_dub = phone_series.drop_duplicates()
     p_list = no_dub.tolist()
+    p_list_reversed = p_list.reverse()
 
-    selection = st.sidebar.selectbox('Select a phone', [''] + p_list)
+    phone_selection = st.sidebar.selectbox('Select a phone', [''] + p_list)
     print("Phone selected")
+
+    sentiment_types = ['All', 'spaCy', 'GCP', 'Roberta', 'Siebert']
+    sentiment_selection = st.sidebar.selectbox('Select a sentiment analysis method', [''] + sentiment_types)
+    print("Sentiment selected")
 
     # data_sentiment = data['text_reduced']
     # sentiment1_list = []
 
     # print(selection)
-    df_sentiment = get_df_sentiment(data)
+    print(data.columns)
 
-    df_selected = df_sentiment[df_sentiment['Phone Name'] == selection]
-    st.subheader("Sentiment Analysis of " + selection)
-    st.dataframe(df_selected[['Phone Name', 'Sentiment Score', 'Sentiment Label']])
+    if sentiment_selection == 'All':
+        df_sentiment = data[['Video Id', 'Phone Name', 'Spacy Label', 'Spacy Score','GCP Score', 'GCP Magnitude', 'Roberta Neg', 'Roberta Neu', 'Roberta Pos', 'Siebert Label', 'Siebert Score']]
+        st.subheader(
+            "Sentiment Analysis of first three videos of YouTube Teardown and Repair Assessment search for" + '\n' + phone_selection)
+        st.dataframe(df_sentiment[df_sentiment['Phone Name'] == phone_selection])
+    elif sentiment_selection == 'spaCy':
+        df_sentiment = data[['Video Id', 'Phone Name', 'Spacy Label', 'Spacy Score']]
+        st.subheader(
+            "Sentiment Analysis of first three videos of YouTube Teardown and Repair Assessment search for" + '\n' + phone_selection)
+        st.dataframe(df_sentiment[df_sentiment['Phone Name'] == phone_selection])
+    elif sentiment_selection == 'GCP':
+        df_sentiment = data[['Video Id', 'Phone Name', 'GCP Score', 'GCP Magnitude']]
+        st.subheader(
+            "Sentiment Analysis of first three videos of YouTube Teardown and Repair Assessment search for" + '\n' + phone_selection)
+        st.dataframe(df_sentiment[df_sentiment['Phone Name'] == phone_selection])
+    elif sentiment_selection == 'Roberta':
+        df_sentiment = data[['Video Id', 'Phone Name', 'Roberta Neg', 'Roberta Neu', 'Roberta Pos']]
+        st.subheader(
+            "Sentiment Analysis of first three videos of YouTube Teardown and Repair Assessment search for" + '\n' + phone_selection)
+        st.dataframe(df_sentiment[df_sentiment['Phone Name'] == phone_selection])
+    elif sentiment_selection == 'Siebert':
+        df_sentiment = data[['Video Id', 'Phone Name', 'Seiebert Label', 'Siebert Score']]
+        st.subheader(
+            "Sentiment Analysis of first three videos of YouTube Teardown and Repair Assessment search for" + '\n' + phone_selection)
+        st.dataframe(df_sentiment[df_sentiment['Phone Name'] == phone_selection])
+
+    #df_sentiment = get_df_sentiment(data)
+
+    # df_selected = df_sentiment[df_sentiment['Phone Name'] == selection]
+    # st.subheader("Sentiment Analysis of first three videos of YouTube Teardown and Repair Assessment search for" + '\n' + phone_selection)
+    # st.dataframe(df_sentiment[df_sentiment['Phone Name'] == phone_selection])
 
 
 def filter_by_selectbox():
@@ -199,12 +264,46 @@ def filter_by_selectbox():
     if selection == "YouTube":
         get_youtube_sentiment_data()
 
-st.subheader("Results")
-st.write(
-    """Our NLP analysis show done with SpaCy show us ..% corralated results with the sentiment scores from the IFixIt data.
-    Keeping in mind that youtube transcript texts """
-)
 
-# data = load_data_youtube()
+
+
+
+
+data = load_youtube_sentiment_data()
 filter_by_selectbox()
 # data = filter_by_selectbox(data)
+
+
+st.subheader("End Results")
+st.write("""    
+Our NLP analysis shows corralated results with the sentiment scores from the IFixIt data. Keeping in mind that YouTube transcript texts with poorly created video captions can damage the video’s message through inaccuracy.
+ """
+)
+
+st.write(""" **Challenges** 
+AutoCaptioning: As YouTube generate automatic captions, it combines Google's automated speech recognition technology with its own subtitling system including automatic speech recognition (ASR) technology to generate auto captions.
+""")
+
+st.write("""**Takeaway from the challenge:** Automatic speech recognition software has become more sophisticated, but the quality of the video captions can still vary widely.
+""")
+
+
+st.write("**1. SpaCy** Top 5 Phones")
+df_spacy_top_5 = data.groupby('Phone Name')['Spacy Score'].mean().to_frame()
+df_spacy_top_5 = df_spacy_top_5.sort_values(by='Spacy Score', ascending=False)
+st.dataframe(df_spacy_top_5.head(5))
+
+st.write("**2. GCP** Top 5 Phones")
+df_gcp_top_5 = data.groupby('Phone Name')['GCP Score'].mean().to_frame()
+df_gcp_top_5 = df_gcp_top_5.sort_values(by='GCP Score', ascending=False)
+st.dataframe(df_gcp_top_5.head(5))
+
+st.write("**3. Roberta** Top 5 Phones")
+df_roberta_top_5 = data.groupby('Phone Name')['Roberta Pos'].mean().to_frame()
+df_roberta_top_5 = df_roberta_top_5.sort_values(by='Roberta Pos', ascending=False)
+st.dataframe(df_roberta_top_5.head(5))
+
+st.write("**4. Siebert** Top 5 Phones")
+df_siebert_top_5 = data.groupby('Phone Name')['Siebert Score'].mean().to_frame()
+df_siebert_top_5 = df_siebert_top_5.sort_values(by='Siebert Score', ascending=False)
+st.dataframe(df_siebert_top_5.head(5))
