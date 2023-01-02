@@ -17,7 +17,7 @@ st.sidebar.header("Exploratory Data Analysis")
 st.write(
     """Exploratory Data Analysis refers to the critical process of performing initial investigations on data so as to 
     discover patterns,to spot anomalies,to test hypothesis and to check assumptions with the help of summary statistics 
-    and graphical representations. Here you can find Exploratory Data Analysis for the IFixIt Data. Enjoy!"""
+    and graphical representations. Here you can find Exploratory Data Analysis for the IFixIt Data!"""
 )
 
 
@@ -46,7 +46,7 @@ data = load_ifixit_data()
 print(data.head())
 s = data['score'].value_counts().sort_index()
 df_chart = s.to_frame()
-st.subheader("Count of Phones by Scores")
+st.subheader("Number of Phones by Scores")
 st.bar_chart(df_chart)
 st.write(
     "Here we can see that  more than half of the analyzed phones, received a repairability score above the the mean value 5.6136")

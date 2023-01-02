@@ -255,7 +255,9 @@ def get_youtube_sentiment_data():
 
 
 def filter_by_selectbox():
-    list = ["IFixIt", "YouTube"]
+    #list = ["IFixIt", "YouTube"]
+    list = ["YouTube"]
+
     selection = st.sidebar.selectbox('Select dataset to apply sentiment analysis on', [''] + list)
     print(selection)
     if selection == "IFixIt":

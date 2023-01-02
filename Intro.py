@@ -35,12 +35,29 @@ st.write("# Welcome to Product Pass Social Media Analysis Results! 🚀")
 with st.expander("ℹ️ - About this app", expanded=True):
     st.write(
         """     
-   -   This  app is an easy-to-use interface built in Streamlit using [KeyBERT](https://github.com/MaartenGr/KeyBERT) library
-   -   It uses a minimal keyword extraction technique that leverages multiple NLP embeddings and relies on 🤗 [Transformers](https://huggingface.co/transformers/)
+   -   This  app is an easy-to-use interface built in Streamlit utilized to show EDA and Sentiment Analysis Results developed for analyzing YouTube transcript data.
            """
     )
 
     st.markdown("")
+
+
+st.subheader("IFixIt")
+
+st.write("""
+- iFixit is a global community of people helping each other repair devices with a mission to make repair accessible and easy for as many people around the world as possible. Including the approach of “the easier it is to fix something; the more people will do it.“.
+- Aims to decrease electronic waste and the toxic legacy of our digital age
+- IFixIt shows also an important engagement in the YouTube community with over 989K subscribers
+""")
+
+st.subheader("Repairability Scores")
+st.write("""
+Based on if:
+- internal components are easy to open for access 
+- battery can be replaced without any tools
+- removing internal components requires specialty screwdrivers and knowledge of the adhesive removal technique
+""")
+
 
 
 @st.cache
@@ -351,4 +368,10 @@ def youtube_sentiment():
 #     youtube_sentiment()
 
 # load_ifixit_data()
-load_youtube_data()
+# load_youtube_data()
+
+st.subheader("IFixIt Repairability Scores Data")
+st.write("Their data and summarized results give key information about the phones that are regularly used this day")
+st.write("To see the document please go to [this page](https://www.ifixit.com/smartphone-repairability?sort=date) or scroll down for the same results displayed here.")
+data = load_ifixit_data()
+st.dataframe(data)
